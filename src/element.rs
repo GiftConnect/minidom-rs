@@ -412,7 +412,7 @@ impl Element {
                     let text = reader.decode(&s)?.to_owned();
                     if text != "" {
                         let current_elem = stack.last_mut().unwrap();
-                        current_elem.append_text_node(text);
+                        current_elem.append_cdata_node(text);
                     }
                 }
                 Event::Eof => {
@@ -630,6 +630,25 @@ impl Element {
     /// ```
     pub fn append_text_node<S: Into<String>>(&mut self, child: S) {
         self.children.push(Node::Text(child.into()));
+    }
+
+    /// Appends a CDATA node to an `Element`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let mut elem = Element::bare("node");
+    ///
+    /// assert_eq!(elem.text(), "");
+    ///
+    /// elem.append_cdata_node("text");
+    ///
+    /// assert_eq!(elem.text(), "text");
+    /// ```
+    pub fn append_cdata_node<S: Into<String>>(&mut self, child: S) {
+        self.children.push(Node::CData(child.into()));
     }
 
     /// Appends a comment node to an `Element`.
@@ -886,8 +905,10 @@ impl<'a> Iterator for Texts<'a> {
 
     fn next(&mut self) -> Option<&'a str> {
         for item in &mut self.iter {
-            if let Node::Text(ref child) = *item {
-                return Some(child);
+            match *item {
+                Node::Text(ref child) => return Some(child),
+                Node::CData(ref child) => return Some(child),
+                _ => {}
             }
         }
         None
@@ -904,8 +925,10 @@ impl<'a> Iterator for TextsMut<'a> {
 
     fn next(&mut self) -> Option<&'a mut String> {
         for item in &mut self.iter {
-            if let Node::Text(ref mut child) = *item {
-                return Some(child);
+            match *item {
+                Node::Text(ref mut child) => return Some(child),
+                Node::CData(ref mut child) => return Some(child),
+                _ => {}
             }
         }
         None

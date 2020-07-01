@@ -104,6 +104,20 @@ fn writer_escapes_text() {
 }
 
 #[test]
+fn writer_cdata_does_not_escape() {
+    let root: Element = "<root><![CDATA[ <tag /> ]]></root>".parse().unwrap();
+    //let root = Element::builder("root", "ns1").append("<3").build();
+    let mut writer = Vec::new();
+    {
+        root.write_to(&mut writer).unwrap();
+    }
+    assert_eq!(
+        String::from_utf8(writer).unwrap(),
+        r#"<root><![CDATA[ <tag /> ]]></root>"#
+    );
+}
+
+#[test]
 fn builder_works() {
     let elem = Element::builder("a")
         .ns("b")
@@ -127,6 +141,14 @@ fn children_iter_works() {
     assert!(iter.next().unwrap().is("child", "root_ns"));
     assert!(iter.next().unwrap().is("child", "child_ns"));
     assert_eq!(iter.next(), None);
+}
+
+
+#[test]
+fn cdata_nested_tag() {
+    let elem: Element = "<root><![CDATA[ <tag /> ]]></root>".parse().unwrap();
+
+    assert_eq!(elem.text(), " <tag /> ".to_owned());
 }
 
 #[test]

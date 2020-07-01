@@ -23,6 +23,8 @@ pub enum Node {
     Element(Element),
     /// A text node.
     Text(String),
+    /// A CDATA node.
+    CData(String),
     #[cfg(feature = "comments")]
     /// A comment node.
     Comment(String),
@@ -47,6 +49,7 @@ impl Node {
         match *self {
             Node::Element(ref e) => Some(e),
             Node::Text(_) => None,
+            Node::CData(_) => None,
             #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
@@ -70,6 +73,7 @@ impl Node {
         match *self {
             Node::Element(ref mut e) => Some(e),
             Node::Text(_) => None,
+            Node::CData(_) => None,
             #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
@@ -93,6 +97,7 @@ impl Node {
         match self {
             Node::Element(e) => Some(e),
             Node::Text(_) => None,
+            Node::CData(_) => None,
             #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
@@ -116,6 +121,7 @@ impl Node {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref s) => Some(s),
+            Node::CData(ref s) => Some(s),
             #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
@@ -145,6 +151,7 @@ impl Node {
         match *self {
             Node::Element(_) => None,
             Node::Text(ref mut s) => Some(s),
+            Node::CData(ref mut s) => Some(s),
             #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
@@ -168,6 +175,7 @@ impl Node {
         match self {
             Node::Element(_) => None,
             Node::Text(s) => Some(s),
+            Node::CData(s) => Some(s),
             #[cfg(feature = "comments")]
             Node::Comment(_) => None,
         }
@@ -179,6 +187,9 @@ impl Node {
             Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
             Node::Text(ref s) => {
                 writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
+            }
+            Node::CData(ref s) => {
+                writer.write_event(Event::CData(BytesText::from_escaped_str(s)))?;
             }
             #[cfg(feature = "comments")]
             Node::Comment(ref s) => {
@@ -222,6 +233,7 @@ impl PartialEq for Node {
         match (self, other) {
             (&Node::Element(ref elem1), &Node::Element(ref elem2)) => elem1 == elem2,
             (&Node::Text(ref text1), &Node::Text(ref text2)) => text1 == text2,
+            (&Node::CData(ref text1), &Node::Text(ref text2)) => text1 == text2,
             #[cfg(feature = "comments")]
             (&Node::Comment(ref text1), &Node::Comment(ref text2)) => text1 == text2,
             _ => false,
